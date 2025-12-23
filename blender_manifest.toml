@@ -6,7 +6,7 @@ id = "fractal_family"
 version = "1.1.1"
 name = "Fractal Family"
 tagline = "Create fractal curves with ease using complex integer lattices"
-maintainer = "blender-deepseek"
+maintainer = "imare32"
 # Supported types: "add-on", "theme"
 type = "add-on"
 

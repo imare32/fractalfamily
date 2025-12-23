@@ -1,6 +1,6 @@
 bl_info = {
     "name": "Fractal Family",
-    "author": "blender-deepseek",
+    "author": "imare32",
     "description": "Create fractal curves with ease using complex integer lattices.",
     "blender": (4, 2, 0),
     "version": (1, 1, 0),
