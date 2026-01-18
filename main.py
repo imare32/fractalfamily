@@ -2,6 +2,7 @@ import itertools
 import math
 
 import bpy
+from bpy.app.handlers import persistent
 from mathutils import Matrix, Vector
 
 from .default_presets import default_curvedefs
@@ -476,7 +477,7 @@ def on_show_preview_changed(self, context):
                 obj.hide_set(True)
             if i == 2:
                 obj.select_set(True)
-            if i==0 or i==1:
+            if i == 0 or i == 1:
                 obj.select_set(False)
         on_active_curve_def_change(self, context)
     else:
@@ -695,10 +696,10 @@ class MainPanel(bpy.types.Panel):
                 row.prop(fractalfamily_props.active_curve.shape_keys, "eval_time", text="Evaluation Time")
 
 
-@bpy.app.handlers.persistent
-def load_default_presets(scene):
+@persistent
+def load_default_presets(dummy=None):
     """Load default curve presets into the property group."""
-    print("try load default presets")
+    # print("try load default presets")
     try:
         wm = bpy.context.window_manager
     except AttributeError:
@@ -722,8 +723,11 @@ def load_default_presets(scene):
         if first_name is None:
             first_name = name
 
-    if first_name and not wm.fractalfamily_props.selected_preset_name:
-        wm.fractalfamily_props.selected_preset_name = first_name
+    if first_name:
+        if not wm.fractalfamily_props.selected_preset_name:
+            wm.fractalfamily_props.selected_preset_name = first_name
+
+        on_preset_name_changed(wm.fractalfamily_props, bpy.context)
     return None
 
 
