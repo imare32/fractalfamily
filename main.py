@@ -318,14 +318,17 @@ def on_active_curve_def_change(self, context):
         active_generator.update_level_points(2)
         for i, points in enumerate(active_generator.level_points[:3]):
             name = f"__fractalfamily_preview_level_{i}__"
-            curve = bpy.data.curves.get(name)
-            if curve:
-                curve.splines.clear()
-                spline = curve.splines.new(type="POLY")
-                spline.use_cyclic_u = False
-                spline.points.add(count=len(points))
-                for j, point in enumerate(points):
-                    spline.points[j + 1].co = *point, 1.0
+            try:
+                curve = bpy.data.curves.get(name)
+                if curve:
+                    curve.splines.clear()
+                    spline = curve.splines.new(type="POLY")
+                    spline.use_cyclic_u = False
+                    spline.points.add(count=len(points))
+                    for j, point in enumerate(points):
+                        spline.points[j + 1].co = *point, 1.0
+            except AttributeError:
+                pass
 
 
 class GeneratorItem(bpy.types.PropertyGroup):
@@ -692,11 +695,20 @@ class MainPanel(bpy.types.Panel):
                 row.prop(fractalfamily_props.active_curve.shape_keys, "eval_time", text="Evaluation Time")
 
 
-def load_default_presets():
+@bpy.app.handlers.persistent
+def load_default_presets(scene):
     """Load default curve presets into the property group."""
-    wm = bpy.context.window_manager
-    if not hasattr(wm, "fractalfamily_props"):
-        return
+    print("try load default presets")
+    try:
+        wm = bpy.context.window_manager
+    except AttributeError:
+        wm = None
+
+    if wm is None and bpy.data.window_managers:
+        wm = bpy.data.window_managers[0]
+
+    if wm is None or not hasattr(wm, "fractalfamily_props"):
+        return 0.1
 
     presets = wm.fractalfamily_props.presets
     presets.clear()
@@ -710,8 +722,9 @@ def load_default_presets():
         if first_name is None:
             first_name = name
 
-    if first_name:
+    if first_name and not wm.fractalfamily_props.selected_preset_name:
         wm.fractalfamily_props.selected_preset_name = first_name
+    return None
 
 
 def create_curve_poly(points: list[Vector], name: str = "Curve", num_segments: int = 1, is_closed: bool = False):
@@ -908,9 +921,12 @@ def register():
 
     # Load default presets
     # Use a timer to ensure context is ready
+    bpy.app.handlers.load_post.append(load_default_presets)
     bpy.app.timers.register(load_default_presets, first_interval=0.1)
 
 
 def unregister():
     """Unregister the add-on."""
+    if load_default_presets in bpy.app.handlers.load_post:
+        bpy.app.handlers.load_post.remove(load_default_presets)
     del bpy.types.WindowManager.fractalfamily_props
